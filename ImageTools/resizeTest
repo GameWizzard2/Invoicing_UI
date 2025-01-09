@@ -1,0 +1,11 @@
+from PIL import Image
+import os
+
+def check_write_permissions(folder_path):
+    if os.access(folder_path, os.W_OK):
+        print(f"Write permissions are available for: {folder_path}")
+    else:
+        print(f"No write permissions for: {folder_path}")
+
+# Example usage
+check_write_permissions(r"C:\Users\Chris\OneDrive\Programming\Python_Projects\Current\Invoicing_UI\Example_pics\Destination")

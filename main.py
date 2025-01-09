@@ -1,4 +1,17 @@
-from ImageTools.ResizeImage import resize_image
+import sys
+import logging
+
+from PySide6.QtWidgets import QApplication
+
+from GUI import FolderSelectorApp
+from Logger import LoggerSetup
+
+
 
 if __name__ == '__main__':
-    resize_image("input.jpg", "output.jpg", 800, 600, quality=75)
+    LoggerSetup().initialize()
+    app = QApplication(sys.argv)
+    window = FolderSelectorApp()
+    window.run()  # Explicitly call the run method
+    window.show()
+    sys.exit(app.exec())
