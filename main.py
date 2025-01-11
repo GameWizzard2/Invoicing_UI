@@ -3,7 +3,7 @@ import logging
 
 from PySide6.QtWidgets import QApplication
 
-from GUI import FolderSelectorApp
+from app import MainWindow
 from Logger import LoggerSetup
 
 
@@ -11,7 +11,7 @@ from Logger import LoggerSetup
 if __name__ == '__main__':
     LoggerSetup().initialize()
     app = QApplication(sys.argv)
-    window = FolderSelectorApp()
+    window = MainWindow()
     window.run()  # Explicitly call the run method
     window.show()
     sys.exit(app.exec())
