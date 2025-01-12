@@ -19,8 +19,8 @@ from app.utils import resize_image_by_half
 class ResizerApp(BaseWindow):
     def __init__(self):
         super().__init__()
-        # Instance variable to store source and destination folder path
         self.setWindowTitle("Image Resizer")
+        # Instance variable to store source and destination folder path
         self.selectedInputFolder = None
         self.selectdOutputFolder = None
 

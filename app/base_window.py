@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
 )
 
 from PySide6.QtGui import QAction
-from app.utils import resize_image_by_half
 
 
 
