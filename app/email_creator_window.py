@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QFileDialog,
     QLabel,
+    QLineEdit,
 )
 from PySide6.QtGui import QAction
 
@@ -20,14 +21,22 @@ class EmailFormatter(BaseWindow):
         # Instance variable to store source and destination folder path
         self.setWindowTitle("Email Formatter")
 
+        # Set empty string for container and seal numbers
+        self.originalContainerNumber = QLineEdit()
+        self.orginalSealNumber = QLineEdit()
+        self.NewContainerNumber = QLineEdit()
+        self.newlSealNumber = QLineEdit()
+
     def setup_ui(self):
         # Create and add widgets
-        
-
 
         # Add project scope combo box.
         self.project_scope_combo_box()
         self.formLayout = QFormLayout()
+        self.formLayout.addRow('Original Container', self.originalContainerNumber)
+        self.formLayout.addRow('Original Seal', self.orginalSealNumber)
+        self.formLayout.addRow('New Container', self.NewContainerNumber)
+        self.formLayout.addRow('New Seal', self.newlSealNumber)
         self.formLayout.addRow('Project Scope:', self.emailTypeSelectionComboBox)
         # Add form layout to the main layout
         self.mainLayout.addLayout(self.formLayout)
@@ -46,15 +55,25 @@ class EmailFormatter(BaseWindow):
     # Define a dictionary for actions
     #FIXME set values for {orignalContainerNumber} and {NewContainerNumber}
         actions = {
-            'Inspection': 'Inspection of {orginalContainerNumber}',
-            'Adjustment': 'Adjustment of {orginalContainerNumber}',
-            'Transload': 'Transload from {orignalContainerNumber} into {NewContainerNumber}.',
+            'Inspection': f'Inspection of {self.originalContainerNumber.text()}',
+            'Adjustment': f'Adjustment of {self.originalContainerNumber.text()}',
+            'Transload': f'Transload from {self.originalContainerNumber.text()} into {self.NewContainerNumber.text()}.',
             'Custom Input': logging.info('User picked a custom input option for "Project Scope" selection')
         }
-
         # Update the label using the dictionary
         self.emailTypeSelectionLabel.setText(actions.get(selected_value, "Invalid selection. Please choose an email type."))
         
+        if selected_value == "Custom Input":
+            self.userInputProjectScope = QLineEdit()
+            self.formLayout.addRow("Enter project scope details:", self.userInputProjectScope)
+
+        
+    
+    def clear_dynamic_rows(self):
+        # Remove rows dynamically added after the first static row
+        for i in range(self.formLayout.rowCount() - 1, 0, -1):
+            self.formLayout.removeRow(i)
+
 
     def run(self):
         # Organize startup tasks here
