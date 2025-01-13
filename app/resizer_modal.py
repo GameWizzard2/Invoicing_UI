@@ -107,12 +107,10 @@ class ResizerApp(BaseWindow):
                     f"inputFilePath: {inputFilePath} and outputFilePath: {outputFilePath}"
                     )
 
-                # Filter for valid image files
-                if file.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif')):
+                if is_valid_image_format(file):
                     resize_image_by_half(inputFilePath, outputFilePath)
                     countImagesResized += 1
                 else:
-                    logging.info(f"Skipping non-image file: {file}")
                     skippedFiles += (f"{file}\n")
 
             # Let user know if all images were resized.
@@ -124,6 +122,23 @@ class ResizerApp(BaseWindow):
         else:
             self.messageBox.setText("No 'Destination' or 'Source' folder selected yet! \nPlease verfiy both folders have been set.")
         self.messageBox.exec()
+
+def is_valid_image_format(file: str) -> bool:
+    # FIXME move to a diff module.
+    """
+    Checks if the provided file name corresponds to a valid image format.
+
+    Parameters:
+    - file (str): The name or path of the file to check.
+
+    Returns:
+    - bool: True if the file is a valid image format, False otherwise.
+    """
+    if file.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif')):
+        return True
+    else:
+        logging.debug(f"is a non-image file: {file}")
+        return False 
 
 
 if __name__ == "__main__":
