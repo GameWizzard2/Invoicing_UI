@@ -24,7 +24,7 @@ class EmailFormatter(BaseWindow):
         # Set empty string for container and seal numbers
         self.originalContainerNumber = QLineEdit()
         self.orginalSealNumber = QLineEdit()
-        self.NewContainerNumber = QLineEdit("Not input")
+        self.NewContainerNumber = QLineEdit()
         self.newlSealNumber = QLineEdit()
 
         # UI components initialized in methods
@@ -38,22 +38,33 @@ class EmailFormatter(BaseWindow):
 
     def setup_ui(self):
         # Create and add widgets
+        # Init layout
+        self.formLayout = QFormLayout()
+
+        # Add form fields
+        self._add_form_fields()
 
         # Add project scope combo box.
         self.project_scope_combo_box()
-        self.formLayout = QFormLayout()
-        self.formLayout.addRow('Original Container', self.originalContainerNumber)
-        self.formLayout.addRow('Original Seal', self.orginalSealNumber)
-        self.formLayout.addRow('New Container', self.NewContainerNumber)
-        self.formLayout.addRow('New Seal', self.newlSealNumber)
         self.formLayout.addRow('Project Scope:', self.emailTypeSelectionComboBox)
+
         # Add form layout to the main layout
         self.mainLayout.addLayout(self.formLayout)
 
         # Create label to display self.formLayout.
+        self._add_email_type_label()
+
+    def _add_form_fields(self):
+        self.formLayout.addRow('Original Container', self.originalContainerNumber)
+        self.formLayout.addRow('Original Seal', self.orginalSealNumber)
+        self.formLayout.addRow('New Container', self.NewContainerNumber)
+        self.formLayout.addRow('New Seal', self.newlSealNumber)
+        
+
+    def _add_email_type_label(self):
         self.emailTypeSelectionLabel = QLabel('Select an Email Type')
         self.mainLayout.addWidget(self.emailTypeSelectionLabel)
-        
+
     def project_scope_combo_box(self):
         self.emailTypeSelectionComboBox = QComboBox()
         self.emailTypeSelectionComboBox.addItems(['Inspection', 'Adjustment', 'Transload', 'Custom Input'])
@@ -73,11 +84,11 @@ class EmailFormatter(BaseWindow):
         # Update the label using the dictionary
         self.emailTypeSelectionLabel.setText(actions.get(selected_value, "Invalid selection. Please choose an email type."))
 
-        # Handle user 'Custom Input' selection in combobox
+        # Handle user 'Custom Input' selection in combobox.
         self.selectedEmailType = selected_value
-        self.manage_project_scope_user_input_input()
+        self.manage_project_scope_user_input()
 
-    def manage_project_scope_user_input_input(self):
+    def manage_project_scope_user_input(self):
         if (self.selectedEmailType == "Custom Input"):
             # Create and add the custom input field
             self.userInputProjectScope = QLineEdit()
