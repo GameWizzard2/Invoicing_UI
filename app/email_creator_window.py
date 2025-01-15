@@ -113,31 +113,46 @@ class EmailFormatter(BaseWindow):
         """
         Generate email body text based on the selected email type and container/seal information.
         """
-        # Retrieve text from input fields
-        ogContainer = self.originalContainerNumber.text()
-        ogSeal = self.orginalSealNumber.text()
-        newContainer = self.NewContainerNumber.text()
-        newSeal = self.newlSealNumber.text()
+        # Retrieve container and seal details
+        details = self.get_container_seal_details()
 
         # Define actions for each email type
-        actions = {
-            'Inspection': f'Container: {ogContainer}\n\nOld Seal: {ogSeal}\nNew Seal: {newSeal}\n',
-            'Adjustment': f'Container: {ogContainer}\n\nOld Seal: {ogSeal}\nNew Seal: {newSeal}\n',
-            'Transload': f'Original Container: {ogContainer}\nOld Seal: {ogSeal}\n\nNew Container: {newContainer}\nNew Seal: {newSeal}\n',
+        actions = self.define_seal_info_actions(details)
+
+        # Get the email body based on the selected email type
+        return self.get_email_body(actions)
+
+    def get_container_seal_details(self):
+        """
+        Retrieve container and seal details from input fields.
+        """
+        return {
+            'ogContainer': self.originalContainerNumber.text(),
+            'ogSeal': self.orginalSealNumber.text(),
+            'newContainer': self.NewContainerNumber.text(),
+            'newSeal': self.newlSealNumber.text(),
+        }
+
+    def define_seal_info_actions(self, details):
+        """
+        Define the email body actions based on container and seal details.
+        """
+        return {
+            'Inspection': f"Container: {details['ogContainer']}\n\nOld Seal: {details['ogSeal']}\nNew Seal: {details['newSeal']}\n",
+            'Adjustment': f"Container: {details['ogContainer']}\n\nOld Seal: {details['ogSeal']}\nNew Seal: {details['newSeal']}\n",
+            'Transload': f"Original Container: {details['ogContainer']}\nOld Seal: {details['ogSeal']}\n\nNew Container: {details['newContainer']}\nNew Seal: {details['newSeal']}\n",
             'Custom Input': ""  # Custom input is handled separately
         }
 
-        # Check if the selected email type exists in actions
+    def get_email_body(self, actions):
+        """
+        Retrieve the email body based on the selected email type.
+        """
         if self.selectedEmailType in actions:
-            email_body = actions[self.selectedEmailType]
-            # Handle custom input if needed
-            if self.selectedEmailType == 'Custom Input' and hasattr(self, 'userInputProjectScope'):
-                email_body = self.userInputProjectScope.text()
-            return email_body
+            return actions[self.selectedEmailType]
         else:
             logging.debug("Invalid or no email type selected.")
             return "Invalid selection or no email type selected."
-
 
     def _add_form_fields(self):
         self.formLayout.addRow('Original Container', self.originalContainerNumber)
