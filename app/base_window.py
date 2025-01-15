@@ -17,7 +17,7 @@ class BaseWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Base Window Settings")
-        self.setGeometry(100, 100, 400, 200)
+        self.resize(800, 600)
 
         # Set up widgets
         self.centralWidget = QWidget()
@@ -28,3 +28,4 @@ class BaseWindow(QMainWindow):
 
         # Setup Message Box
         self.messageBox = QMessageBox()
+    

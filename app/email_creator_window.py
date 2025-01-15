@@ -1,19 +1,24 @@
 import logging
 import sys 
+import textwrap
+from datetime import datetime
 
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
     QFormLayout,
     QPushButton,
+    QHBoxLayout,
     QMessageBox,
     QFileDialog,
+    QTextEdit,
     QLabel,
     QLineEdit,
 )
 from PySide6.QtGui import QAction
 
 from base_window import BaseWindow
+from text_editor_windowed import TextEditor
 
 class EmailFormatter(BaseWindow):
     def __init__(self):
@@ -45,7 +50,7 @@ class EmailFormatter(BaseWindow):
         self._add_form_fields()
 
         # Add project scope combo box.
-        self.project_scope_combo_box()
+        self.create_project_scope_combo_box()
         self.formLayout.addRow('Project Scope:', self.emailTypeSelectionComboBox)
 
         # Add form layout to the main layout
@@ -53,6 +58,86 @@ class EmailFormatter(BaseWindow):
 
         # Create label to display self.formLayout.
         self._add_email_type_label()
+
+        # Create the QTextEdit
+        self.TextEditor = TextEditor()
+        self.mainLayout.addWidget(self.TextEditor)
+
+
+        # Create Email format button
+        self.GenerateEmail = QPushButton("Generate Email")
+        self.GenerateEmail.clicked.connect(self.create_formated_email)
+        self.mainLayout.addWidget(self.GenerateEmail)
+
+    def create_formated_email(self):
+        #TODO self.emailTypeSelectionComboBox.currentText() if set to custom input, input must reflect user title input
+        # Get the current date
+        currentDate = datetime.now()
+
+        # Retrieve the saved text from the TextEditor object
+        emailBody = self.TextEditor.savedText.strip() if self.TextEditor.savedText else "No notes provided."
+
+        # Determine the type of report
+        if self.is_custom_input_selected():
+            typeOfReport = self.userProjectScopeType.text()
+        else:
+            typeOfReport = self.emailTypeSelectionComboBox.currentText()
+
+        # Generate the container seal info
+        containerSealInfo = self.generate_container_seal_info()
+
+        # Build the email body
+        lines = [
+            "All,",
+            "",
+            f"Please see attached a copy of our {typeOfReport} Report for:",
+            "",
+            "Project Scope: THIS NEEDS TO BE FIXED",
+            "",
+            "<b>Notes & Photo Breakdown:</b>",
+            "",
+            f"Date: {currentDate.strftime('%m/%d/%Y')}",
+            "",
+            containerSealInfo.strip(),
+            "",
+            emailBody,
+            ""
+        ]
+
+        # Combine the lines into a single string
+        self.emailFormated = "\n".join(lines)
+        print(self.emailFormated)
+        return self.emailFormated
+
+    def generate_container_seal_info(self):
+        """
+        Generate email body text based on the selected email type and container/seal information.
+        """
+        # Retrieve text from input fields
+        ogContainer = self.originalContainerNumber.text()
+        ogSeal = self.orginalSealNumber.text()
+        newContainer = self.NewContainerNumber.text()
+        newSeal = self.newlSealNumber.text()
+
+        # Define actions for each email type
+        actions = {
+            'Inspection': f'Container: {ogContainer}\n\nOld Seal: {ogSeal}\nNew Seal: {newSeal}\n',
+            'Adjustment': f'Container: {ogContainer}\n\nOld Seal: {ogSeal}\nNew Seal: {newSeal}\n',
+            'Transload': f'Original Container: {ogContainer}\nOld Seal: {ogSeal}\n\nNew Container: {newContainer}\nNew Seal: {newSeal}\n',
+            'Custom Input': ""  # Custom input is handled separately
+        }
+
+        # Check if the selected email type exists in actions
+        if self.selectedEmailType in actions:
+            email_body = actions[self.selectedEmailType]
+            # Handle custom input if needed
+            if self.selectedEmailType == 'Custom Input' and hasattr(self, 'userInputProjectScope'):
+                email_body = self.userInputProjectScope.text()
+            return email_body
+        else:
+            logging.debug("Invalid or no email type selected.")
+            return "Invalid selection or no email type selected."
+
 
     def _add_form_fields(self):
         self.formLayout.addRow('Original Container', self.originalContainerNumber)
@@ -65,7 +150,8 @@ class EmailFormatter(BaseWindow):
         self.emailTypeSelectionLabel = QLabel('Select an Email Type')
         self.mainLayout.addWidget(self.emailTypeSelectionLabel)
 
-    def project_scope_combo_box(self):
+
+    def create_project_scope_combo_box(self):
         self.emailTypeSelectionComboBox = QComboBox()
         self.emailTypeSelectionComboBox.addItems(['Inspection', 'Adjustment', 'Transload', 'Custom Input'])
         self.emailTypeSelectionComboBox.currentTextChanged.connect(self.handle_email_type_selection)
@@ -88,12 +174,32 @@ class EmailFormatter(BaseWindow):
         self.selectedEmailType = selected_value
         self.manage_project_scope_user_input()
 
-    def manage_project_scope_user_input(self):
+    def is_custom_input_selected(self):
         if (self.selectedEmailType == "Custom Input"):
-            # Create and add the custom input field
-            self.userInputProjectScope = QLineEdit()
+           return True
+        else:
+            return False
+
+    def manage_project_scope_user_input(self):
+        if self.is_custom_input_selected() == True:
+            # Create horizontal layout for the row
+            self.customInputRowLayout = QHBoxLayout()
+
+            # Create widgets
+            userInputLabel1 = QLabel("Enter project scope details:")
+            self.userProjectScopeType = QLineEdit()
+            self.userProjectScopeType.setPlaceholderText('Enter Project scope, Example: "Transload", "Inspection", or "other".')
+
+            self.userProjectScopeDetails = QLineEdit()
+            self.userProjectScopeDetails.setPlaceholderText("Enter Project Scope details, containers, etc")
+            
+            # Add widgets to the horizontal layout
+            self.customInputRowLayout.addWidget(userInputLabel1)
+            self.customInputRowLayout.addWidget(self.userProjectScopeType)
+            self.customInputRowLayout.addWidget(self.userProjectScopeDetails)
+
             self.customInputRow = self.formLayout.rowCount()  # Track the row index
-            self.formLayout.addRow("Enter project scope details:", self.userInputProjectScope)
+            self.formLayout.addRow("Enter project scope details:", self.customInputRowLayout)
         else:
             # Remove the "Custom Input" row if it exists
             if hasattr(self, "userInputProjectScope"):
