@@ -35,10 +35,9 @@ class EmailFormatter(BaseWindow):
         # UI components initialized in methods
         self.emailTypeSelectionComboBox = None
         self.emailTypeSelectionLabel = None
-        self.selectedEmailType = None
+        self.getProjectScopeType = None
 
          # Dynamic input management
-        self.userInputProjectScope = None
         self.customInputRow = None
 
     def setup_ui(self):
@@ -114,13 +113,13 @@ class EmailFormatter(BaseWindow):
         Generate email body text based on the selected email type and container/seal information.
         """
         # Retrieve container and seal details
-        details = self.get_container_seal_details()
+        actions = self.get_container_seal_details()
 
-        # Define actions for each email type
-        actions = self.define_seal_info_actions(details)
+        # Define actions for each email type using a dictionary.
+        getSealInfoText = self.define_seal_info_actions(actions)
 
         # Get the email body based on the selected email type
-        return self.get_email_body(actions)
+        return self.get_email_body(getSealInfoText)
 
     def get_container_seal_details(self):
         """
@@ -148,8 +147,9 @@ class EmailFormatter(BaseWindow):
         """
         Retrieve the email body based on the selected email type.
         """
-        if self.selectedEmailType in actions:
-            return actions[self.selectedEmailType]
+        if self.getProjectScopeType in actions:
+            se
+            return actions[self.getProjectScopeType]
         else:
             logging.debug("Invalid or no email type selected.")
             return "Invalid selection or no email type selected."
@@ -169,37 +169,53 @@ class EmailFormatter(BaseWindow):
     def create_project_scope_combo_box(self):
         self.emailTypeSelectionComboBox = QComboBox()
         self.emailTypeSelectionComboBox.addItems(['Inspection', 'Adjustment', 'Transload', 'Custom Input'])
-        self.emailTypeSelectionComboBox.currentTextChanged.connect(self.handle_email_type_selection)
+        self.emailTypeSelectionComboBox.currentTextChanged.connect(self.update_email_type_combo_box_selection)
         return self.emailTypeSelectionComboBox
     
-    def handle_email_type_selection(self, selected_value):
-    # Define a dictionary for actions
-    #FIXME set values for {orignalContainerNumber} and {NewContainerNumber}
-        
+    def _get_project_combo_box_actions(self) -> dict:
+        # Define a dictionary for actions displayed in the self.emailTypeSelectionComboBox
         actions = {
-            'Inspection': f'Inspection of {self.originalContainerNumber.text()}',
-            'Adjustment': f'Adjustment of {self.originalContainerNumber.text()}',
-            'Transload': f'Transload from {self.originalContainerNumber.text()} into {self.NewContainerNumber.text()}.',
-            'Custom Input': logging.info('User picked a custom input option for "Project Scope" selection')
+        'Inspection': f'Inspection of {self.originalContainerNumber.text()}',
+        'Adjustment': f'Adjustment of {self.originalContainerNumber.text()}',
+        'Transload': f'Transload from {self.originalContainerNumber.text()} into {self.NewContainerNumber.text()}.',
+        'Custom Input': "Define you Project Title Scope, then provide a Description."  
         }
-        # Update the label using the dictionary
+
+        return actions
+        
+    
+    def update_email_type_combo_box_selection(self, selected_value):
+        actions = self._get_project_combo_box_actions()
+        #FIXME set values for {orignalContainerNumber} and {NewContainerNumber}
+        
+        # Update the label using the dictionary stored in actions
         self.emailTypeSelectionLabel.setText(actions.get(selected_value, "Invalid selection. Please choose an email type."))
 
+        # Define Variables for Project scope Type, and description for Type
+        defaultText = '<b>"Enter Scope Details Here"</b>'
+        self.projectScopeDescription = self.emailTypeSelectionLabel.setText(actions.get(selected_value, defaultText))
+        self.getProjectScopeType = selected_value
+        
+
         # Handle user 'Custom Input' selection in combobox.
-        self.selectedEmailType = selected_value
-        self.manage_project_scope_user_input()
+        self.handle_combo_box_user_input()
 
-    def is_custom_input_selected(self):
-        if (self.selectedEmailType == "Custom Input"):
-           return True
-        else:
-            return False
-
-    def manage_project_scope_user_input(self):
+    def handle_combo_box_user_input(self):
+        #TODO make logic that checks if "Custom Input combo box" is navigated away from and then call self._delete_custom_input_row() instead of everytime Custom Input is not selected.
         if self.is_custom_input_selected() == True:
             # Create horizontal layout for the row
             self.customInputRowLayout = QHBoxLayout()
+            self._create_custom_input_row()
+            self.customInputRow = self.formLayout.rowCount()  # Track the row index
+            self.formLayout.addRow("Enter project scope details:", self.customInputRowLayout)
+        else:
+            # Remove the "Custom Input" row if it exists
+            if hasattr(self, "customInputRowLayout"):
+                self._delete_custom_input_row()
+                
 
+    def _create_custom_input_row(self):
+            # Creates Custom input row.
             # Create widgets
             userInputLabel1 = QLabel("Enter project scope details:")
             self.userProjectScopeType = QLineEdit()
@@ -213,14 +229,20 @@ class EmailFormatter(BaseWindow):
             self.customInputRowLayout.addWidget(self.userProjectScopeType)
             self.customInputRowLayout.addWidget(self.userProjectScopeDetails)
 
-            self.customInputRow = self.formLayout.rowCount()  # Track the row index
-            self.formLayout.addRow("Enter project scope details:", self.customInputRowLayout)
+    def _delete_custom_input_row(self):
+        # Deletes Custom input row.
+        self.formLayout.removeRow(self.customInputRow)  
+        self.customInputRowLayout.deleteLater()
+        del self.customInputRowLayout
+        del self.customInputRow  
+
+    def is_custom_input_selected(self):
+        if (self.getProjectScopeType == "Custom Input"):
+            return True
         else:
-            # Remove the "Custom Input" row if it exists
-            if hasattr(self, "userInputProjectScope"):
-                self.formLayout.removeRow(self.customInputRow)  
-                del self.userInputProjectScope  
-                del self.customInputRow  
+            return False
+
+   
         
     def run(self):
         # Organize startup tasks here
