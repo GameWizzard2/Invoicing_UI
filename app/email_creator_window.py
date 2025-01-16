@@ -1,6 +1,5 @@
 import logging
 import sys 
-import textwrap
 from datetime import datetime
 
 from PySide6.QtWidgets import (
@@ -79,19 +78,22 @@ class EmailFormatter(BaseWindow):
         # Determine the type of report
         if self.is_custom_input_selected():
             typeOfReport = self.userProjectScopeType.text()
+            projectScopeDescription = self.userProjectScopeDetails.text()
         else:
-            typeOfReport = self.emailTypeSelectionComboBox.currentText()
+            typeOfReport = self.getProjectScopeType
+            projectScopeDescription = self.projectScopeDescription
+
+        #projectScopeDescription = typeOfReport
 
         # Generate the container seal info
         containerSealInfo = self.generate_container_seal_info()
-
         # Build the email body
         lines = [
             "All,",
             "",
             f"Please see attached a copy of our {typeOfReport} Report for:",
             "",
-            "Project Scope: THIS NEEDS TO BE FIXED",
+            f"Project Scope: {projectScopeDescription}",
             "",
             "<b>Notes & Photo Breakdown:</b>",
             "",
@@ -148,7 +150,6 @@ class EmailFormatter(BaseWindow):
         Retrieve the email body based on the selected email type.
         """
         if self.getProjectScopeType in actions:
-            se
             return actions[self.getProjectScopeType]
         else:
             logging.debug("Invalid or no email type selected.")
@@ -189,11 +190,11 @@ class EmailFormatter(BaseWindow):
         #FIXME set values for {orignalContainerNumber} and {NewContainerNumber}
         
         # Update the label using the dictionary stored in actions
-        self.emailTypeSelectionLabel.setText(actions.get(selected_value, "Invalid selection. Please choose an email type."))
+        action_text = actions.get(selected_value, "Invalid selection. Please choose an email type.")
+        self.emailTypeSelectionLabel.setText(actions.get(action_text))
 
         # Define Variables for Project scope Type, and description for Type
-        defaultText = '<b>"Enter Scope Details Here"</b>'
-        self.projectScopeDescription = self.emailTypeSelectionLabel.setText(actions.get(selected_value, defaultText))
+        self.projectScopeDescription = action_text
         self.getProjectScopeType = selected_value
         
 
