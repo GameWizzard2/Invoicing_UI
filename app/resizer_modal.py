@@ -22,7 +22,7 @@ class ResizerApp(BaseWindow):
         self.setWindowTitle("Image Resizer")
         # Instance variable to store source and destination folder path
         self.selectedInputFolder = None
-        self.selectdOutputFolder = None
+        self.selectedOutputFolder = None
 
     def setup_ui(self):
         # Create and add widgets
@@ -37,8 +37,8 @@ class ResizerApp(BaseWindow):
         self.inputFolderPathLabel = QLabel("No source destination folder selected.")
         self.mainLayout.addWidget(self.inputFolderPathLabel)
 
-        self.ouputFolderPathLabel = QLabel("No selected destination selected.")
-        self.mainLayout.addWidget(self.ouputFolderPathLabel)
+        self.outputFolderPathLabel = QLabel("No selected destination selected.")
+        self.mainLayout.addWidget(self.outputFolderPathLabel)
 
         self.useFolderButton = QPushButton("Resize Images in selected folder")
         self.useFolderButton.clicked.connect(self.resize_images_in_folder)
@@ -75,22 +75,12 @@ class ResizerApp(BaseWindow):
 
     def open_input_folder(self):
         # Opens the selected input folder.
-        inputFolderPath = QFileDialog.getExistingDirectory(self, "Select Folder")
-        if inputFolderPath:
-            self.selectedInputFolder = inputFolderPath
-            self.inputFolderPathLabel.setText(f"Selected Folder: {inputFolderPath}")
-        else:
-            self.inputFolderPathLabel.setText("No folder selected.")
+            self.selectedInputFolder = super().open_folder(self.inputFolderPathLabel, "Select Source Folder")
 
     def open_output_folder(self):
         # Opens the selected output folder.
-        outputFolderPath = QFileDialog.getExistingDirectory(self, "Select Folder")
-        if outputFolderPath:
-            self.selectedOutputFolder = outputFolderPath
-            self.ouputFolderPathLabel.setText(f"Selected Folder: {outputFolderPath}")
-        else:
-            self.ouputFolderPathLabel.setText("No folder selected.")
-
+        self.selectedOutputFolder = super().open_folder(self.outputFolderPathLabel, "Select Destination Folder")
+        
     def resize_images_in_folder(self):
         # Process each file in the input folder and resize if image.
         totalFilesInFolder = len(os.listdir(self.selectedInputFolder))
