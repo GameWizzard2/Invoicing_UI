@@ -11,8 +11,8 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QAction
 
-from app.base_window import BaseWindow
-from app.resizer_modal import ResizerApp
+from .base_window import BaseWindow
+from .resizer_modal import ResizerApp
 
 class MainWindow(BaseWindow):
     def __init__(self):

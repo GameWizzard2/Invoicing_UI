@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QAction
 
-from app.base_window import BaseWindow
+from app.windows.base_window import BaseWindow
 from app.utils import resize_image_by_half
 
 
@@ -82,6 +82,8 @@ class ResizerApp(BaseWindow):
         self.selectedOutputFolder = super().open_folder(self.outputFolderPathLabel, "Select Destination Folder")
         
     def resize_images_in_folder(self):
+        #TODO use display_opend_folder_here
+        
         # Process each file in the input folder and resize if image.
         totalFilesInFolder = len(os.listdir(self.selectedInputFolder))
         if self.selectedInputFolder and self.selectedOutputFolder:

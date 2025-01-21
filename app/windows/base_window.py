@@ -55,6 +55,9 @@ class BaseWindow(QMainWindow):
             label.setText(f"Selected Folder: {inputFolderPath}")
             return inputFolderPath
         else:
-            self.inputFolderPathLabel.setText("No folder selected.")
+            label.setText("No folder selected.")
             return None
+
+
+
     

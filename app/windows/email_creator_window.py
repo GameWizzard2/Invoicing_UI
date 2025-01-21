@@ -1,9 +1,13 @@
 import logging
 import sys 
+import os
 from datetime import datetime
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication,
+    QBoxLayout,
+    QCheckBox,
     QComboBox,
     QFormLayout,
     QPushButton,
@@ -13,11 +17,12 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QLabel,
     QLineEdit,
+    QLayout
 )
 from PySide6.QtGui import QAction
 
 from base_window import BaseWindow
-from text_editor_windowed import TextEditor
+from app.windows.text_editor_windowed import TextEditor
 
 class EmailFormatter(BaseWindow):
     def __init__(self):
@@ -43,6 +48,7 @@ class EmailFormatter(BaseWindow):
         # Create and add widgets
         # Init layout
         self.formLayout = QFormLayout()
+        #self.formLayo = QFormLayout()
 
         # Add form fields
         self._add_form_fields()
@@ -57,15 +63,67 @@ class EmailFormatter(BaseWindow):
         # Create label to display self.formLayout.
         self._add_email_type_label()
 
+        # Create a checkbox that enables folder seletion to select images to place in the email.
+        folderSelectionPhotosCheckbox = QCheckBox("Add a list of photo names to email?", self)
+        self.mainLayout.addWidget(folderSelectionPhotosCheckbox)
+        folderSelectionPhotosCheckbox.checkStateChanged.connect(self.on_check_box_state_changed)
+
+        # Placeholder Layout for the dynmaic row addded when checkbox clicked
+        self.dynamicLayout1 = QBoxLayout(QBoxLayout.LeftToRight)
+        self.mainLayout.addLayout(self.dynamicLayout1)
+        
         # Create the QTextEdit
         self.TextEditor = TextEditor()
         self.mainLayout.addWidget(self.TextEditor)
-
 
         # Create Email format button
         self.GenerateEmail = QPushButton("Generate Email")
         self.GenerateEmail.clicked.connect(self.create_formated_email)
         self.mainLayout.addWidget(self.GenerateEmail)
+
+    def create_check_box_layout(self):
+            self.photoCheckBoxFormLayout = QFormLayout()
+
+            # Define Widgets
+            self.getPhotoPathButton = QPushButton("Select Folder Containing Photos")
+            self.setPhotoPathLabel = QLabel("No Folder Selected")
+            self.photoCheckBoxFormLayout.addRow(self.getPhotoPathButton, self.setPhotoPathLabel)
+
+            self.getPhotoPathButton.clicked.connect(self.set_photo_path)
+
+            self.dynamicLayout1.addLayout(self.photoCheckBoxFormLayout)
+
+    def set_photo_path(self):
+         self.photoPath = self.open_folder(self.setPhotoPathLabel, 'Select Photo Folder')
+
+            
+    def on_check_box_state_changed(self, state):
+        if state == Qt.Checked:
+            self.create_check_box_layout()
+        
+        elif state == Qt.Unchecked:
+            self.remove_layout_and_widgets(self.photoCheckBoxFormLayout)
+
+    def remove_layout_and_widgets(self, layout: QLayout) -> None:
+        # TODO move to baseWindow
+        """
+            Removes all widgets and items from the given layout, and schedules the layout for deletion.
+
+            Parameters:
+            - layout (QLayout): The layout to be cleared and removed.
+
+            Returns:
+            - None
+        """
+        while layout.count():
+            child = layout.takeAt(0)
+            widget = child.widget()
+            if widget:
+                widget.deleteLater()
+                del widget
+        
+        layout.deleteLater()
+        del layout
 
     def create_formated_email(self):
         #TODO self.emailTypeSelectionComboBox.currentText() if set to custom input, input must reflect user title input
@@ -102,7 +160,8 @@ class EmailFormatter(BaseWindow):
             containerSealInfo.strip(),
             "",
             emailBody,
-            ""
+            "",
+            f"{"\n".join([file for file in os.listdir(self.photoPath)])}"
         ]
 
         # Combine the lines into a single string
@@ -218,7 +277,6 @@ class EmailFormatter(BaseWindow):
     def _create_custom_input_row(self):
             # Creates Custom input row.
             # Create widgets
-            userInputLabel1 = QLabel("Enter project scope details:")
             self.userProjectScopeType = QLineEdit()
             self.userProjectScopeType.setPlaceholderText('Enter Project scope, Example: "Transload", "Inspection", or "other".')
 
@@ -226,7 +284,6 @@ class EmailFormatter(BaseWindow):
             self.userProjectScopeDetails.setPlaceholderText("Enter Project Scope details, containers, etc")
             
             # Add widgets to the horizontal layout
-            self.customInputRowLayout.addWidget(userInputLabel1)
             self.customInputRowLayout.addWidget(self.userProjectScopeType)
             self.customInputRowLayout.addWidget(self.userProjectScopeDetails)
 
