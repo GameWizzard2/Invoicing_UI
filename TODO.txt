@@ -1,0 +1,21 @@
+email_creator_window.py
+1. add logic to custom to dertmine if theres two container or just one.
+
+
+2. If photos, arrange photo based on number in Parentheses. Example file name: STKX_10267_New_Car_Before_Load_Distribution (16).jpg
+In this case program would put arrange this file into number 16 when adding file names.
+
+3. Add a field to accept a recipents name to attach to the the email.
+
+4. Project Scope not labeling container numbers? 
+Project Scope: Transload from  into .
+
+<b>Notes & Photo Breakdown:</b>
+
+Date: 01/21/2025
+
+Original Container: STKX 101048
+Old Seal:
+
+New Container: STKX 10267
+New Seal:

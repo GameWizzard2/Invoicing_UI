@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QAction
 
 from base_window import BaseWindow
-from app.windows.text_editor_windowed import TextEditor
+from text_editor_windowed import TextEditor
 
 class EmailFormatter(BaseWindow):
     def __init__(self):
@@ -141,6 +141,13 @@ class EmailFormatter(BaseWindow):
             typeOfReport = self.getProjectScopeType
             projectScopeDescription = self.projectScopeDescription
 
+        # Determine if there is a photo folder selected
+        if hasattr(self, 'photoPath') and self.photoPath and os.path.exists(self.photoPath) and os.path.isdir(self.photoPath):
+            files = "\n".join([file for file in os.listdir(self.photoPath)])
+        else:
+            files = ""
+
+
         #projectScopeDescription = typeOfReport
 
         # Generate the container seal info
@@ -161,7 +168,7 @@ class EmailFormatter(BaseWindow):
             "",
             emailBody,
             "",
-            f"{"\n".join([file for file in os.listdir(self.photoPath)])}"
+            f"{files}"
         ]
 
         # Combine the lines into a single string
