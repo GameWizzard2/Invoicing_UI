@@ -1,3 +1,5 @@
+import logging
+
 from PySide6.QtWidgets import (
 QPushButton,
 QTextEdit, 
@@ -15,17 +17,12 @@ class TextEditor(QWidget):
         self.textEdit.setPlaceholderText("Type your text here...")
         self.textEdit.setMaximumHeight(400)
 
-         # Create a Save button
-        self.saveButton = QPushButton("Load Text For Format")
-        self.saveButton.clicked.connect(self.save_plan_text_to_variable)
-
         # Variable to store the formatted text
         self.savedText = ""
 
         # Set up a layout and add the QTextEdit widget
         layout = QVBoxLayout()
         layout.addWidget(self.textEdit)
-        layout.addWidget(self.saveButton)
         self.setLayout(layout)
 
         # Apply the layout to the TextEditor
@@ -33,11 +30,11 @@ class TextEditor(QWidget):
 
     def save_rich_text_to_variable(self):
         self.savedTextRich = self.textEdit.toHtml()
-        print(f"Rich text saved:\n{self.savedTextRich}")
+        logging.info(f"Rich text saved:\n{self.savedTextRich}")
         return self.savedTextRich
     
-    def save_plan_text_to_variable(self):
+    def save_plain_text_to_variable(self):
         self.savedText = self.textEdit.toPlainText()
-        print(f"Text saved:\n{self.savedText}")
+        logging.info(f"Plain Text saved:\n{self.savedText}")
         return self.savedText
     

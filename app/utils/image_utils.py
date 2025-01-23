@@ -27,6 +27,24 @@ def resize_image_by_half(input_path, output_path):
             logging.info(f"Image resized and saved to {output_path}")
     except Exception as e:
         logging.error(f"Error resizing image: {e}")
+        
+    
+def is_valid_image_format(file: str) -> bool:
+    # FIXME move to a diff module.
+    """
+    Checks if the provided file name corresponds to a valid image format.
+
+    Parameters:
+    - file (str): The name or path of the file to check.
+
+    Returns:
+    - bool: True if the file is a valid image format, False otherwise.
+    """
+    if file.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif')):
+        return True
+    else:
+        logging.debug(f"is a non-image file: {file}")
+        return False 
 
 # Example usage
 if __name__ == "__main__":

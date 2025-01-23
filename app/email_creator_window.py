@@ -21,8 +21,12 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QAction
 
-from base_window import BaseWindow
-from text_editor_windowed import TextEditor
+from utils.email_logic import EmailLogic
+
+from utils.os_utils import has_file_path
+
+from windows.base_window import BaseWindow
+from windows.text_editor_windowed import TextEditor
 
 class EmailFormatter(BaseWindow):
     def __init__(self):
@@ -36,6 +40,9 @@ class EmailFormatter(BaseWindow):
         self.NewContainerNumber = QLineEdit()
         self.newlSealNumber = QLineEdit()
 
+        # Set string for email Generation
+        self.email = "Email generator not yet activated by user."
+
         # UI components initialized in methods
         self.emailTypeSelectionComboBox = None
         self.emailTypeSelectionLabel = None
@@ -43,6 +50,13 @@ class EmailFormatter(BaseWindow):
 
          # Dynamic input management
         self.customInputRow = None
+
+        #Self explaintory
+        self.currentDate = datetime.now()
+
+        # Set strings to get photo for email generation
+        self.photoPath = ""
+        self.photoFiles = ""
 
     def setup_ui(self):
         # Create and add widgets
@@ -78,7 +92,7 @@ class EmailFormatter(BaseWindow):
 
         # Create Email format button
         self.GenerateEmail = QPushButton("Generate Email")
-        self.GenerateEmail.clicked.connect(self.create_formated_email)
+        self.GenerateEmail.clicked.connect(self.create_email)
         self.mainLayout.addWidget(self.GenerateEmail)
 
     def create_check_box_layout(self):
@@ -94,7 +108,13 @@ class EmailFormatter(BaseWindow):
             self.dynamicLayout1.addLayout(self.photoCheckBoxFormLayout)
 
     def set_photo_path(self):
-         self.photoPath = self.open_folder(self.setPhotoPathLabel, 'Select Photo Folder')
+        self.photoPath = self.open_folder(self.setPhotoPathLabel, 'Select Photo Folder')
+        if hasattr(self,'photoPath') and self.photoPath and os.path.exists(self.photoPath) and os.path.isdir(self.photoPath):
+            self.photoFiles = "\n".join([file for file in os.listdir(self.photoPath)])
+            logging.info("No photos were provided to attach to email.")
+        else:
+            logging.info("No photos were provided to attach to email.")
+            self.photoFiles = ""
 
             
     def on_check_box_state_changed(self, state):
@@ -125,63 +145,25 @@ class EmailFormatter(BaseWindow):
         layout.deleteLater()
         del layout
 
-    def create_formated_email(self):
-        #TODO self.emailTypeSelectionComboBox.currentText() if set to custom input, input must reflect user title input
-        # Get the current date
-        currentDate = datetime.now()
-
-        # Retrieve the saved text from the TextEditor object
-        emailBody = self.TextEditor.savedText.strip() if self.TextEditor.savedText else "No notes provided."
-
-        # Determine the type of report
-        if self.is_custom_input_selected():
-            typeOfReport = self.userProjectScopeType.text()
-            projectScopeDescription = self.userProjectScopeDetails.text()
-        else:
-            typeOfReport = self.getProjectScopeType
-            projectScopeDescription = self.projectScopeDescription
-
-        # Determine if there is a photo folder selected
-        if hasattr(self, 'photoPath') and self.photoPath and os.path.exists(self.photoPath) and os.path.isdir(self.photoPath):
-            files = "\n".join([file for file in os.listdir(self.photoPath)])
-        else:
-            files = ""
-
-
-        #projectScopeDescription = typeOfReport
-
-        # Generate the container seal info
-        containerSealInfo = self.generate_container_seal_info()
-        # Build the email body
-        lines = [
-            "All,",
-            "",
-            f"Please see attached a copy of our {typeOfReport} Report for:",
-            "",
-            f"Project Scope: {projectScopeDescription}",
-            "",
-            "<b>Notes & Photo Breakdown:</b>",
-            "",
-            f"Date: {currentDate.strftime('%m/%d/%Y')}",
-            "",
-            containerSealInfo.strip(),
-            "",
-            emailBody,
-            "",
-            f"{files}"
-        ]
-
+    def create_email(self):
         # Combine the lines into a single string
-        self.emailFormated = "\n".join(lines)
-        print(self.emailFormated)
-        return self.emailFormated
+        self.email = EmailLogic()
+        
+        if self.is_custom_input_selected and hasattr(self, 'userProjectScopeType'):
+            self.email.generate_email_body(self.userProjectScopeType.text(), self.custom_row_actions(),
+                                       self.currentDate, self.get_container_seal_actions(), self.TextEditor.save_plain_text_to_variable(), self.photoFiles)
+
+        else:
+            self.email.generate_email_body(self.emailTypeSelectionComboBox.currentText(), self.get_report_type_actions(),
+                                       self.currentDate, self.get_container_seal_actions(), self.TextEditor.save_plain_text_to_variable(), self.photoFiles)
+        self.email.print_email()
 
     def generate_container_seal_info(self):
         """
         Generate email body text based on the selected email type and container/seal information.
         """
         # Retrieve container and seal details
-        actions = self.get_container_seal_details()
+        actions = self.get_container_seal_actions()
 
         # Define actions for each email type using a dictionary.
         getSealInfoText = self.define_seal_info_actions(actions)
@@ -189,7 +171,7 @@ class EmailFormatter(BaseWindow):
         # Get the email body based on the selected email type
         return self.get_email_body(getSealInfoText)
 
-    def get_container_seal_details(self):
+    def get_container_seal_actions(self):
         """
         Retrieve container and seal details from input fields.
         """
@@ -211,9 +193,18 @@ class EmailFormatter(BaseWindow):
             'Custom Input': ""  # Custom input is handled separately
         }
 
-    def get_email_body(self, actions):
+    def get_seal_info_for_email_body(self, actions: dict) -> str:
         """
-        Retrieve the email body based on the selected email type.
+        Retrieves the seal information for the email body based on the current project scope type.
+
+        Args:
+            actions (dict): A dictionary where keys represent possible project scope types
+                            and values represent corresponding seal information.
+
+        Returns:
+            str: The seal information corresponding to the selected project scope type.
+                If the project scope type is invalid or not found in the `actions` dictionary,
+                a default message indicating an invalid or no selection is returned.
         """
         if self.getProjectScopeType in actions:
             return actions[self.getProjectScopeType]
@@ -237,9 +228,8 @@ class EmailFormatter(BaseWindow):
         self.emailTypeSelectionComboBox = QComboBox()
         self.emailTypeSelectionComboBox.addItems(['Inspection', 'Adjustment', 'Transload', 'Custom Input'])
         self.emailTypeSelectionComboBox.currentTextChanged.connect(self.update_email_type_combo_box_selection)
-        return self.emailTypeSelectionComboBox
     
-    def _get_project_combo_box_actions(self) -> dict:
+    def get_report_type_actions(self) -> dict:
         # Define a dictionary for actions displayed in the self.emailTypeSelectionComboBox
         actions = {
         'Inspection': f'Inspection of {self.originalContainerNumber.text()}',
@@ -252,7 +242,7 @@ class EmailFormatter(BaseWindow):
         
     
     def update_email_type_combo_box_selection(self, selected_value):
-        actions = self._get_project_combo_box_actions()
+        actions = self.get_report_type_actions()
         #FIXME set values for {orignalContainerNumber} and {NewContainerNumber}
         
         # Update the label using the dictionary stored in actions
@@ -293,6 +283,18 @@ class EmailFormatter(BaseWindow):
             # Add widgets to the horizontal layout
             self.customInputRowLayout.addWidget(self.userProjectScopeType)
             self.customInputRowLayout.addWidget(self.userProjectScopeDetails)
+
+
+    def custom_row_actions(self):
+        """
+        Collects user inputs and returns them as a dictionary.
+        """
+        return {
+            self.userProjectScopeType.text() : self.userProjectScopeDetails.text(),
+        }
+
+        # Return the inner function to allow access
+        return custom_row_actions
 
     def _delete_custom_input_row(self):
         # Deletes Custom input row.
