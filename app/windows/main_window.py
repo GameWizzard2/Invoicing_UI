@@ -13,6 +13,7 @@ from PySide6.QtGui import QAction
 
 from .base_window import BaseWindow
 from .resizer_modal import ResizerApp
+from .email_creator_window import EmailFormatter
 
 class MainWindow(BaseWindow):
     def __init__(self):
@@ -50,7 +51,8 @@ class MainWindow(BaseWindow):
         self.modal.show()
 
     def open_email_creation(self):
-        self.messageBox.setText("Feature under construction.")
-        self.messageBox.exec()
+        self.modal = EmailFormatter()
+        self.modal.run()
+        self.modal.show()
 
         

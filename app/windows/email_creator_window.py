@@ -21,12 +21,12 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QAction
 
-from utils.email_logic import EmailLogic
+from app import EmailLogic
 
-from utils.os_utils import has_file_path
+from app import has_file_path
 
-from windows.base_window import BaseWindow
-from windows.text_editor_windowed import TextEditor
+from app import BaseWindow
+from app.windows.text_editor_windowed import TextEditor
 
 class EmailFormatter(BaseWindow):
     def __init__(self):
@@ -146,7 +146,36 @@ class EmailFormatter(BaseWindow):
         del layout
 
     def create_email(self):
-        # Combine the lines into a single string
+        """
+        Creates an email by dynamically generating its body based on user input or predefined options.
+
+        Description:
+        ------------
+        This method initializes an instance of the `EmailLogic` class and generates the email body based on whether 
+        custom input is selected or predefined options are being used. If `is_custom_input_selected` is `True`, 
+        the email body is constructed using the values from `userProjectScopeType` and `custom_row_actions`. 
+        Otherwise, it uses the selected report type from `emailTypeSelectionComboBox`. The generated email is 
+        then printed to the console.
+
+        Parameters:
+        -----------
+        None
+
+        Instance Attributes Used:
+        --------------------------
+        - `is_custom_input_selected` (bool): A flag indicating whether custom input is selected.
+        - `userProjectScopeType` (QLineEdit): A line edit widget for entering custom project scope types.
+        - `custom_row_actions` (function): A function that dynamically generates additional input data for custom input.
+        - `emailTypeSelectionComboBox` (QComboBox): A combo box containing predefined report type options.
+        - `currentDate` (datetime): The current date to include in the email.
+        - `get_container_seal_actions` (method): Retrieves container seal-related actions.
+        - `TextEditor.save_plain_text_to_variable` (method): Retrieves the plain text from the text editor.
+        - `photoFiles` (str): A string containing the filenames of attached photos.
+
+        Returns:
+        --------
+        None
+        """
         self.email = EmailLogic()
         
         if self.is_custom_input_selected and hasattr(self, 'userProjectScopeType'):
@@ -292,9 +321,6 @@ class EmailFormatter(BaseWindow):
         return {
             self.userProjectScopeType.text() : self.userProjectScopeDetails.text(),
         }
-
-        # Return the inner function to allow access
-        return custom_row_actions
 
     def _delete_custom_input_row(self):
         # Deletes Custom input row.
