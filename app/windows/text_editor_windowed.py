@@ -38,3 +38,22 @@ class TextEditor(QWidget):
         logging.info(f"Plain Text saved:\n{self.savedText}")
         return self.savedText
     
+class EmailWindow(QWidget):
+    """
+    A popup window to display the generated email body.
+    """
+
+    def __init__(self, email_text):
+        super().__init__()
+        self.setWindowTitle("Generated Email Preview")
+        self.setGeometry(200, 200, 500, 300)
+
+        # QTextEdit to display email content
+        self.text_edit = QTextEdit(self)
+        self.text_edit.setPlainText(email_text)
+        self.text_edit.setReadOnly(True)
+
+        # Layout
+        layout = QVBoxLayout()
+        layout.addWidget(self.text_edit)
+        self.setLayout(layout)

@@ -69,6 +69,8 @@ class EmailLogic():
     def print_email(self):
         print(self.email)
 
+
+
             
 
         """currentDate = datetime.now()

@@ -26,7 +26,10 @@ from app import EmailLogic
 from app import has_file_path
 
 from app import BaseWindow
-from app.windows.text_editor_windowed import TextEditor
+from app.windows.text_editor_windowed import (
+    TextEditor,
+    EmailWindow,
+)
 
 class EmailFormatter(BaseWindow):
     def __init__(self):
@@ -124,27 +127,6 @@ class EmailFormatter(BaseWindow):
         elif state == Qt.Unchecked:
             self.remove_layout_and_widgets(self.photoCheckBoxFormLayout)
 
-    def remove_layout_and_widgets(self, layout: QLayout) -> None:
-        # TODO move to baseWindow
-        """
-            Removes all widgets and items from the given layout, and schedules the layout for deletion.
-
-            Parameters:
-            - layout (QLayout): The layout to be cleared and removed.
-
-            Returns:
-            - None
-        """
-        while layout.count():
-            child = layout.takeAt(0)
-            widget = child.widget()
-            if widget:
-                widget.deleteLater()
-                del widget
-        
-        layout.deleteLater()
-        del layout
-
     def create_email(self):
         """
         Creates an email by dynamically generating its body based on user input or predefined options.
@@ -178,14 +160,17 @@ class EmailFormatter(BaseWindow):
         """
         self.email = EmailLogic()
         
-        if self.is_custom_input_selected and hasattr(self, 'userProjectScopeType'):
+        if self.is_custom_input_selected():
             self.email.generate_email_body(self.userProjectScopeType.text(), self.custom_row_actions(),
                                        self.currentDate, self.get_container_seal_actions(), self.TextEditor.save_plain_text_to_variable(), self.photoFiles)
 
         else:
             self.email.generate_email_body(self.emailTypeSelectionComboBox.currentText(), self.get_report_type_actions(),
                                        self.currentDate, self.get_container_seal_actions(), self.TextEditor.save_plain_text_to_variable(), self.photoFiles)
-        self.email.print_email()
+        
+        # Open a new EmailWindow to display the email content
+        self.email_window = EmailWindow(self.email.email)
+        self.email_window.show()
 
     def generate_container_seal_info(self):
         """
@@ -287,17 +272,32 @@ class EmailFormatter(BaseWindow):
         self.handle_combo_box_user_input()
 
     def handle_combo_box_user_input(self):
-        #TODO make logic that checks if "Custom Input combo box" is navigated away from and then call self._delete_custom_input_row() instead of everytime Custom Input is not selected.
-        if self.is_custom_input_selected() == True:
-            # Create horizontal layout for the row
-            self.customInputRowLayout = QHBoxLayout()
-            self._create_custom_input_row()
-            self.customInputRow = self.formLayout.rowCount()  # Track the row index
-            self.formLayout.addRow("Enter project scope details:", self.customInputRowLayout)
-        else:
-            # Remove the "Custom Input" row if it exists
+        #TODO make logic that checks if "Custom Input combo box" is navigated away from and then call self._hide_custom_input_row() instead of everytime Custom Input is not selected.
+        if self.is_custom_input_selected() and not hasattr(self, 'customInputRowLayout'):
+                # Create horizontal layout for the row
+                self.customInputRowLayout = QHBoxLayout()
+                self._create_custom_input_row()
+                self.customInputRow = self.formLayout.rowCount()  # Track the row index
+                self.formLayout.addRow("Enter project scope details:", self.customInputRowLayout)
+
+        elif self.is_custom_input_selected() and hasattr(self, 'customInputRowLayout'):
+            self.customInputRowLayout.setEnabled(True)
+
+        elif (self.is_custom_input_selected() is False) and hasattr(self, 'customInputRowLayout'):
+                self._hide_custom_input_row()
+
+
+        elif self.is_custom_input_selected() and not hasattr(self, 'customInputRowLayout'):
+            logging.info("Custom input is not selected and self.customInputRowLayout does not exist, moving on.")
+
+
+                
+
+        
+        elif self.customInputRowLayout.isEnabled() == False:
+            # Remove the "Custom Input" row if it is not selected.
             if hasattr(self, "customInputRowLayout"):
-                self._delete_custom_input_row()
+                self._hide_custom_input_row()
                 
 
     def _create_custom_input_row(self):
@@ -322,14 +322,15 @@ class EmailFormatter(BaseWindow):
             self.userProjectScopeType.text() : self.userProjectScopeDetails.text(),
         }
 
-    def _delete_custom_input_row(self):
-        # Deletes Custom input row.
-        self.formLayout.removeRow(self.customInputRow)  
-        self.customInputRowLayout.deleteLater()
-        del self.customInputRowLayout
-        del self.customInputRow  
+    def _hide_custom_input_row(self):
+
+        
+        # Remove row from form layout
+        self.customInputRowLayout.setEnabled(False)
+
 
     def is_custom_input_selected(self):
+        # check if custom input is selected in combobox 
         if (self.getProjectScopeType == "Custom Input"):
             return True
         else:
